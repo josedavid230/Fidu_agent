@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
 
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -102,7 +103,13 @@ if db:
     prompt = ChatPromptTemplate.from_template(template)
 
     # Inicialización del LLM
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=api_key, max_tokens=350)
+    llm = ChatOpenAI(
+        model_name="gpt-4o", 
+        temperature=0, 
+        openai_api_key=api_key, 
+        max_tokens=350,
+        streaming=True
+    )
 
     # Creación de la cadena con LCEL
     rag_chain = (
@@ -129,13 +136,16 @@ def read_root():
 @app.post("/ask")
 async def ask_question(request: QuestionRequest):
     if not rag_chain:
-        return {"answer": "Lo siento, el agente de IA no está disponible en este momento. Asegúrate de que haya documentos en la carpeta 'documents' y de que la clave de API de OpenAI sea correcta."}
+        async def error_stream():
+            yield "Lo siento, el agente de IA no está disponible en este momento."
+        return StreamingResponse(error_stream(), media_type="text/plain")
 
-    try:
-        print(f"Recibida pregunta: '{request.question}'")
-        answer = rag_chain.invoke(request.question)
-        print(f"Respuesta generada: '{answer}'")
-        return {"answer": answer}
-    except Exception as e:
-        print(f"Error al procesar la pregunta: {e}")
-        return {"answer": "Lo siento, ocurrió un error al procesar tu pregunta. Por favor, intenta de nuevo."}
+    async def stream_answer():
+        try:
+            async for chunk in rag_chain.astream(request.question):
+                yield chunk
+        except Exception as e:
+            print(f"Error durante el streaming: {e}")
+            yield "Lo siento, ocurrió un error al procesar tu pregunta."
+
+    return StreamingResponse(stream_answer(), media_type="text/plain")

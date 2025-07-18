@@ -68,17 +68,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ question: question }),
             });
 
+            removeTypingIndicator(typingIndicator);
+
             if (!response.ok) {
                 throw new Error('La respuesta de la red no fue correcta');
             }
 
-            const data = await response.json();
-            removeTypingIndicator(typingIndicator);
-            appendMessage(data.answer, 'bot-message');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let botMessageElement = null;
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                
+                if (!botMessageElement) {
+                    botMessageElement = appendMessage('', 'bot-message');
+                }
+                
+                botMessageElement.textContent += chunk;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
 
         } catch (error) {
             console.error('Hubo un problema con la operación de fetch:', error);
-            removeTypingIndicator(typingIndicator);
+            if (typingIndicator) removeTypingIndicator(typingIndicator);
             appendMessage('Lo siento, no pude conectar con el servidor.', 'bot-message');
         }
     };
@@ -97,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.className = className;
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
+        return messageElement; // Devuelve el elemento para poder actualizarlo
     }
 
     function showTypingIndicator() {
