@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Asesor</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <div id="chat-toggle-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </div>
+
+    <div id="chat-container">
+        <div class="chat-header">
+            <h3>FidupreviBOT</h3>
+            <button id="close-chat-btn">&times;</button>
+        </div>
+        <div id="chat-box">
+        </div>
+        <div class="chat-input">
+            <textarea id="user-input" placeholder="Escribe tu pregunta..." rows="1"></textarea>
+            <button id="send-btn">Enviar</button>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>

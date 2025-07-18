@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+python-dotenv
+langchain
+openai
+faiss-cpu
+pypdf
+unstructured[local-inference]
